@@ -83,7 +83,7 @@ func (srv *userService) LoginUser(u entities.UserLoginRequest) (string, error) {
 	if !srv.auth.CheckPasswordHash(u.Password, user.PasswordHash) {
 		return "", fmt.Errorf("passwords do not match")
 	}
-	token, err := srv.auth.MakeJWT(user.NationalCode)
+	token, err := srv.auth.MakeJWT(user.NationalCode, user.UserType.String())
 	if err != nil {
 		return "", err
 	}
