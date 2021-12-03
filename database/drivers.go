@@ -8,7 +8,7 @@ import (
 var Drivers = map[string]*sql.DB{}
 
 func connect(cfg config.DatabaseConfig) (*sql.DB, error) {
-	return sql.Open("", "")
+	return nil, nil
 }
 
 func init() {

@@ -15,6 +15,7 @@ require (
 	github.com/golobby/cast v1.3.0 // indirect
 	github.com/golobby/dotenv v1.3.1 // indirect
 	github.com/golobby/env/v2 v2.2.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
