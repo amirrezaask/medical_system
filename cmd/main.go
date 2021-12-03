@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"medical_system/config"
+	"medical_system/database/models"
+	"medical_system/handlers"
+	"medical_system/services"
 	"medical_system/transport/http"
 	"os"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 )
 
@@ -20,8 +24,13 @@ var serve = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Instance
-		fmt.Printf("configured servers are : %+v\n", cfg.Servers)
 		server := http.NewHTTPServer()
+		db, err := models.Open("sqlite3", "file:ent?&_fk=1")
+		if err != nil {
+			panic(err)
+		}
+
+		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewUsersHandler(services.NewUserService(db.User, &services.AuthService{JWTSecret: []byte("this is a secret")})))
 		if err := server(cfg.Servers.Get("http").Addr); err != nil {
 			panic(err)
 		}

@@ -37,9 +37,8 @@ func configure(e *echo.Echo) {
 func NewHTTPServer() HTTPServer {
 	e := echo.New()
 
-	configure(e)
-
 	return func(address string) error {
+		configure(e)
 		return e.Start(address)
 	}
 

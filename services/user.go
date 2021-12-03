@@ -2,34 +2,34 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"medical_system/database/models"
 	"medical_system/database/models/user"
 	"medical_system/entities"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
-	NewUser(entities.UserCreateRequest) error
+	NewUser(entities.UserSignupRequest) error
 	FindUser(nationalNumber string) (*entities.User, error)
 	UpdateUser(entities.User) error
 	DeleteUser(nationalNumber string) error
+	LoginUser(entities.UserLoginRequest) (string, error)
 }
+
+func NewUserService(db *models.UserClient, auth *AuthService) UserService {
+	return &userService{
+		db:   db,
+		auth: auth,
+	}
+}
+
 type userService struct {
-	db *models.UserClient
+	db   *models.UserClient
+	auth *AuthService
 }
 
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
-func (srv *userService) NewUser(u entities.UserCreateRequest) error {
-	passwordHash, err := HashPassword(u.Password)
+func (srv *userService) NewUser(u entities.UserSignupRequest) error {
+	passwordHash, err := srv.auth.HashPassword(u.Password)
 	if err != nil {
 		return err
 	}
@@ -58,4 +58,19 @@ func (srv *userService) UpdateUser(u entities.User) error {
 func (srv *userService) DeleteUser(nationalNumber string) error {
 	_, err := srv.db.Delete().Where(user.NationalCodeEQ(nationalNumber)).Exec(context.Background())
 	return err
+}
+
+func (srv *userService) LoginUser(u entities.UserLoginRequest) (string, error) {
+	user, err := srv.db.Query().Where(user.NationalCode(u.NationalNumber)).First(context.Background())
+	if err != nil {
+		return "", err
+	}
+	if !srv.auth.CheckPasswordHash(u.Password, user.PasswordHash) {
+		return "", fmt.Errorf("passwords do not match")
+	}
+	token, err := srv.auth.MakeJWT(&entities.User{Name: user.Name, NationalNumber: user.NationalCode})
+	if err != nil {
+		return "", err
+	}
+	return token, err
 }
