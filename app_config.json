@@ -1,0 +1,13 @@
+{
+    "servers": [
+        {
+            "type": "http",
+            "addr": "localhost:8080"
+        }
+    ],
+    "databases" : {
+        "mysql": {
+            "dbname" : "app"
+        }
+    }
+}
