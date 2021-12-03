@@ -17,3 +17,14 @@ func (User) Fields() []ent.Field {
 		field.String("password_hash"),
 	}
 }
+
+type Admin struct {
+	ent.Schema
+}
+
+func (Admin) Fields() []ent.Field {
+	return []ent.Field{
+		field.String("username"),
+		field.String("password_hash"),
+	}
+}

@@ -8,6 +8,19 @@ import (
 	"medical_system/database/models"
 )
 
+// The AdminFunc type is an adapter to allow the use of ordinary
+// function as Admin mutator.
+type AdminFunc func(context.Context, *models.AdminMutation) (models.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AdminFunc) Mutate(ctx context.Context, m models.Mutation) (models.Value, error) {
+	mv, ok := m.(*models.AdminMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *models.AdminMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *models.UserMutation) (models.Value, error)

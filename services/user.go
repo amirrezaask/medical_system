@@ -14,6 +14,7 @@ type UserService interface {
 	UpdateUser(entities.User) error
 	DeleteUser(nationalNumber string) error
 	LoginUser(entities.UserLoginRequest) (string, error)
+	GetUsers(typ string) ([]*entities.User, error)
 }
 
 func NewUserService(db *models.UserClient, auth *AuthService) UserService {
@@ -26,6 +27,20 @@ func NewUserService(db *models.UserClient, auth *AuthService) UserService {
 type userService struct {
 	db   *models.UserClient
 	auth *AuthService
+}
+
+func (srv *userService) GetUsers(typ string) ([]*entities.User, error) {
+	users, err := srv.db.Query().Where(user.UserTypeEQ(user.UserType(typ))).All(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	var usersE []*entities.User
+	for _, u := range users {
+		usersE = append(usersE, &entities.User{Name: u.Name, NationalNumber: u.NationalCode})
+	}
+
+	return usersE, nil
+
 }
 
 func (srv *userService) NewUser(u entities.UserSignupRequest) error {
@@ -68,7 +83,7 @@ func (srv *userService) LoginUser(u entities.UserLoginRequest) (string, error) {
 	if !srv.auth.CheckPasswordHash(u.Password, user.PasswordHash) {
 		return "", fmt.Errorf("passwords do not match")
 	}
-	token, err := srv.auth.MakeJWT(&entities.User{Name: user.Name, NationalNumber: user.NationalCode})
+	token, err := srv.auth.MakeJWT(user.NationalCode)
 	if err != nil {
 		return "", err
 	}

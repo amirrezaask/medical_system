@@ -5,6 +5,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"medical_system/database/models/admin"
 	"medical_system/database/models/user"
 
 	"entgo.io/ent"
@@ -29,7 +30,8 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		user.Table: user.ValidColumn,
+		admin.Table: admin.ValidColumn,
+		user.Table:  user.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

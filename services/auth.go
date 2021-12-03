@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"medical_system/entities"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -38,9 +37,9 @@ func (a *AuthService) ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	return token.Claims.(jwt.MapClaims), nil
 }
 
-func (a *AuthService) MakeJWT(u *entities.User) (string, error) {
+func (a *AuthService) MakeJWT(id string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"national_number": u.NationalNumber,
+		"id": id,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret

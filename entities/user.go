@@ -18,3 +18,7 @@ type UserLoginRequest struct {
 type UserGetProfileRequest struct {
 	NationalNumber string `json:"national_number"`
 }
+
+type Admin struct {
+	Username string `json:"username"`
+}

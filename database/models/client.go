@@ -9,6 +9,7 @@ import (
 
 	"medical_system/database/models/migrate"
 
+	"medical_system/database/models/admin"
 	"medical_system/database/models/user"
 
 	"entgo.io/ent/dialect"
@@ -20,6 +21,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Admin is the client for interacting with the Admin builders.
+	Admin *AdminClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -35,6 +38,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Admin = NewAdminClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -69,6 +73,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Admin:  NewAdminClient(cfg),
 		User:   NewUserClient(cfg),
 	}, nil
 }
@@ -88,6 +93,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
 		config: cfg,
+		Admin:  NewAdminClient(cfg),
 		User:   NewUserClient(cfg),
 	}, nil
 }
@@ -95,7 +101,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		Admin.
 //		Query().
 //		Count(ctx)
 //
@@ -118,7 +124,98 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Admin.Use(hooks...)
 	c.User.Use(hooks...)
+}
+
+// AdminClient is a client for the Admin schema.
+type AdminClient struct {
+	config
+}
+
+// NewAdminClient returns a client for the Admin from the given config.
+func NewAdminClient(c config) *AdminClient {
+	return &AdminClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `admin.Hooks(f(g(h())))`.
+func (c *AdminClient) Use(hooks ...Hook) {
+	c.hooks.Admin = append(c.hooks.Admin, hooks...)
+}
+
+// Create returns a create builder for Admin.
+func (c *AdminClient) Create() *AdminCreate {
+	mutation := newAdminMutation(c.config, OpCreate)
+	return &AdminCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Admin entities.
+func (c *AdminClient) CreateBulk(builders ...*AdminCreate) *AdminCreateBulk {
+	return &AdminCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Admin.
+func (c *AdminClient) Update() *AdminUpdate {
+	mutation := newAdminMutation(c.config, OpUpdate)
+	return &AdminUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AdminClient) UpdateOne(a *Admin) *AdminUpdateOne {
+	mutation := newAdminMutation(c.config, OpUpdateOne, withAdmin(a))
+	return &AdminUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AdminClient) UpdateOneID(id int) *AdminUpdateOne {
+	mutation := newAdminMutation(c.config, OpUpdateOne, withAdminID(id))
+	return &AdminUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Admin.
+func (c *AdminClient) Delete() *AdminDelete {
+	mutation := newAdminMutation(c.config, OpDelete)
+	return &AdminDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *AdminClient) DeleteOne(a *Admin) *AdminDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *AdminClient) DeleteOneID(id int) *AdminDeleteOne {
+	builder := c.Delete().Where(admin.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AdminDeleteOne{builder}
+}
+
+// Query returns a query builder for Admin.
+func (c *AdminClient) Query() *AdminQuery {
+	return &AdminQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Admin entity by its id.
+func (c *AdminClient) Get(ctx context.Context, id int) (*Admin, error) {
+	return c.Query().Where(admin.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AdminClient) GetX(ctx context.Context, id int) *Admin {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AdminClient) Hooks() []Hook {
+	return c.hooks.Admin
 }
 
 // UserClient is a client for the User schema.
