@@ -101,7 +101,7 @@ func (h *UsersHandler) GetPrescriptions(ctx echo.Context) error {
 	} else if user["user_type"] == "patient" {
 		ps, err = h.srv.GetPrescriptionsForPatient(id)
 	} else if user["user_type"] == "admin" {
-		//admin
+		ps, err = h.srv.GetPrescriptionsForAdmin(id)
 	}
 	if err != nil {
 		return ctx.JSON(500, err)
