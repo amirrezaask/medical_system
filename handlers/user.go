@@ -1,11 +1,13 @@
 package handlers
 
 import (
-	"github.com/golang-jwt/jwt"
 	"medical_system/config"
 	"medical_system/entities"
 	"medical_system/services"
 	"net/http"
+	"strconv"
+
+	"github.com/golang-jwt/jwt"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -23,6 +25,8 @@ func (h *UsersHandler) Register(e *echo.Echo) {
 	users.GET("/profile", h.GetProfile, jwtMiddleware)
 	users.POST("/login", h.Login)
 	users.POST("/signup", h.SignUp)
+	users.POST("/prescriptions", h.AddPrescription)
+	users.GET("/prescriptions/:patientID", h.GetPrescriptions)
 }
 func NewUsersHandler(srv services.UserService) *UsersHandler {
 	return &UsersHandler{srv}
@@ -65,4 +69,42 @@ func (h *UsersHandler) GetProfile(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusUnauthorized)
 	}
 	return ctx.JSON(200, user)
+}
+
+func (h *UsersHandler) AddPrescription(ctx echo.Context) error {
+	doctor := ctx.Get("user").(jwt.MapClaims)
+	if doctor["user_type"] != "doctor" {
+		return ctx.String(401, "only doctors can add prescription")
+	}
+	var req entities.AddPrescriptionRequest
+	err := ctx.Bind(&req)
+	if err != nil {
+		ctx.JSON(400, err)
+	}
+	err = h.srv.AddPrescription(req.PatientNationalCode, entities.Prescription{})
+	if err != nil {
+		ctx.JSON(500, err)
+	}
+	return ctx.NoContent(204)
+}
+
+func (h *UsersHandler) GetPrescriptions(ctx echo.Context) error {
+	user := ctx.Get("user").(jwt.MapClaims)
+	idStr := ctx.Param("patientID")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return ctx.JSON(400, err)
+	}
+	var ps interface{}
+	if user["user_type"] == "doctor" {
+		ps, err = h.srv.GetPrescriptionsForDoctor(id)
+	} else if user["user_type"] == "patient" {
+		ps, err = h.srv.GetPrescriptionsForPatient(id)
+	} else if user["user_type"] == "admin" {
+		//admin
+	}
+	if err != nil {
+		return ctx.JSON(500, err)
+	}
+	return ctx.JSON(200, ps)
 }

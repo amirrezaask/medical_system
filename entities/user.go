@@ -22,3 +22,8 @@ type UserGetProfileRequest struct {
 type Admin struct {
 	Username string `json:"username"`
 }
+
+type AddPrescriptionRequest struct {
+	PatientNationalCode string
+	Prescription
+}
