@@ -15,3 +15,8 @@ type PrescriptionForPatient struct {
 	Doctor *User
 	Prescription
 }
+type PrescriptionForAdmin struct {
+	Doctor  *User
+	Patient *User
+	Prescription
+}

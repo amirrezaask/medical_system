@@ -19,12 +19,14 @@ type UserService interface {
 	AddPrescription(patientNationalCode string, u entities.Prescription) error
 	GetPrescriptionsForPatient(patientID int) ([]entities.PrescriptionForPatient, error)
 	GetPrescriptionsForDoctor(patientID int) ([]entities.PrescriptionForDoctor, error)
+	GetPrescriptionsForAdmin(patientID int) ([]entities.PrescriptionForAdmin, error)
 }
 
-func NewUserService(db *models.UserClient, auth *AuthService) UserService {
+func NewUserService(db *models.UserClient, auth *AuthService, pDB *models.PrescriptionClient) UserService {
 	return &userService{
-		userDB: db,
-		auth:   auth,
+		userDB:         db,
+		auth:           auth,
+		prescriptionDB: pDB,
 	}
 }
 
@@ -128,6 +130,34 @@ func (srv *userService) GetPrescriptionsForDoctor(patientID int) ([]entities.Pre
 	}
 	return ps, nil
 }
+func (srv *userService) GetPrescriptionsForAdmin(patientID int) ([]entities.PrescriptionForAdmin, error) {
+	press, err := srv.prescriptionDB.Query().Where(prescription.IDEQ(patientID)).WithUsers().All(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	patient, err := srv.userDB.Query().Where(user.IDEQ(patientID)).WithPrescriptions().First(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	var ps []entities.PrescriptionForAdmin
+	for _, p := range press {
+		doctor, err := srv.userDB.Query().Where(user.IDEQ(int(p.DoctorID))).First(context.Background())
+		if err != nil {
+			return nil, err
+		}
+		ps = append(ps, entities.PrescriptionForAdmin{
+			Doctor:  &entities.User{Name: doctor.Name, NationalNumber: doctor.NationalCode},
+			Patient: &entities.User{Name: patient.Name, NationalNumber: patient.NationalCode},
+			Prescription: entities.Prescription{
+				PatientNationalCode: p.Edges.Users.NationalCode,
+				DoctorID:            doctor.ID,
+				Drugs:               p.DrugsCommaSeperated,
+			},
+		})
+	}
+	return ps, nil
+}
+
 func (srv *userService) GetPrescriptionsForPatient(patientID int) ([]entities.PrescriptionForPatient, error) {
 	press, err := srv.prescriptionDB.Query().Where(prescription.IDEQ(patientID)).WithUsers().All(context.Background())
 	if err != nil {
