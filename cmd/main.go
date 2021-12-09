@@ -29,9 +29,13 @@ var serve = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-
-		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewUsersHandler(services.NewUserService(db.User, &services.AuthService{JWTSecret: []byte("this is a secret")}, db.Prescription)))
-		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewAdminHandler()
+		authService := &services.AuthService{JWTSecret: []byte("this is a secret")}
+		userService := services.NewUserService(db.User, authService, db.Prescription)
+		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewUsersHandler(userService))
+		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewAdminHandler(
+			services.NewAdminService(db.Admin, authService, db.User, db.Prescription),
+			userService,
+		))
 		if err := server(cfg.Servers.Get("http").Addr); err != nil {
 			panic(err)
 		}

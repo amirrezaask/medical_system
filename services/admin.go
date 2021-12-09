@@ -63,13 +63,27 @@ func (srv *adminService) Stats() (prescriptionsCount int64, newPatients []entiti
 	y, m, d := time.Now().Date()
 	timeStr := fmt.Sprintf("%d-%d-%dT00:00:00+00:00", y, m, d)
 	t, _ := time.Parse(time.RFC3339, timeStr)
-	ps, err := srv.userDB.Query().Where(user.CreatedAtLTE(t), user.UserTypeEQ("patient")).All(context.Background())
+	psDB, err := srv.userDB.Query().Where(user.CreatedAtLTE(t), user.UserTypeEQ("patient")).All(context.Background())
 	if err != nil {
 		return -1, nil, nil, err
 	}
-	ds, err := srv.userDB.Query().Where(user.CreatedAtLTE(t), user.UserTypeEQ("doctor")).All(context.Background())
+	var ps []entities.User
+	for _, p := range psDB {
+		ps = append(ps, entities.User{
+			Name: p.Name,
+			NationalNumber: p.NationalCode,
+		})
+	}
+	dsDB, err := srv.userDB.Query().Where(user.CreatedAtLTE(t), user.UserTypeEQ("doctor")).All(context.Background())
 	if err != nil {
 		return -1, nil, nil, err
 	}
-	return count, ps, ds, nil
+	var ds []entities.User
+	for _, p := range dsDB {
+		ds = append(ds, entities.User{
+			Name: p.Name,
+			NationalNumber: p.NationalCode,
+		})
+	}
+	return int64(count), ps, ds, nil
 }

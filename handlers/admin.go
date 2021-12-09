@@ -61,4 +61,14 @@ func (h *AdminHandler) GetProfile(ctx echo.Context) error {
 }
 
 func (h *AdminHandler) Stats(ctx echo.Context) error {
+	count, newP, newD, err := h.srv.Stats()
+	if err != nil {
+		return ctx.JSON(500, err)
+	}
+
+	return ctx.JSON(200, map[string]interface{}{
+		"count": count,
+		"new_patients": newP,
+		"new_doctors": newD,
+	})
 }
