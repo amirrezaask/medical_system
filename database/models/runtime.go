@@ -2,8 +2,27 @@
 
 package models
 
+import (
+	"medical_system/database"
+	"medical_system/database/models/prescription"
+	"medical_system/database/models/user"
+	"time"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	prescriptionFields := database.Prescription{}.Fields()
+	_ = prescriptionFields
+	// prescriptionDescCreatedAt is the schema descriptor for created_at field.
+	prescriptionDescCreatedAt := prescriptionFields[3].Descriptor()
+	// prescription.DefaultCreatedAt holds the default value on creation for the created_at field.
+	prescription.DefaultCreatedAt = prescriptionDescCreatedAt.Default.(func() time.Time)
+	userFields := database.User{}.Fields()
+	_ = userFields
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[4].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 }

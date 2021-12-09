@@ -2,6 +2,10 @@
 
 package prescription
 
+import (
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the prescription type in the database.
 	Label = "prescription"
@@ -13,6 +17,8 @@ const (
 	FieldPatientNationalCode = "patient_national_code"
 	// FieldDrugsCommaSeperated holds the string denoting the drugs_comma_seperated field in the database.
 	FieldDrugsCommaSeperated = "drugs_comma_seperated"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
 	// Table holds the table name of the prescription in the database.
@@ -32,6 +38,7 @@ var Columns = []string{
 	FieldDoctorID,
 	FieldPatientNationalCode,
 	FieldDrugsCommaSeperated,
+	FieldCreatedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "prescriptions"
@@ -54,3 +61,8 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+)

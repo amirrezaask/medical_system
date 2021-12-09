@@ -23,6 +23,7 @@ func (h *AdminHandler) Register(e *echo.Echo) {
 	users.GET("/profile/:username", h.GetProfile, jwtMiddleware)
 	users.POST("/login", h.Login)
 	users.GET("/users/:type", h.GetUsers)
+	users.GET("/admin/stats", h.Stats)
 }
 func NewAdminHandler(srv services.AdminService, userSrv services.UserService) *AdminHandler {
 	return &AdminHandler{srv, userSrv}
@@ -57,4 +58,7 @@ func (h *AdminHandler) GetProfile(ctx echo.Context) error {
 		return ctx.NoContent(http.StatusUnauthorized)
 	}
 	return ctx.JSON(200, user)
+}
+
+func (h *AdminHandler) Stats(ctx echo.Context) error {
 }

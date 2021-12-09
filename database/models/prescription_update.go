@@ -8,6 +8,7 @@ import (
 	"medical_system/database/models/predicate"
 	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -49,6 +50,20 @@ func (pu *PrescriptionUpdate) SetPatientNationalCode(s string) *PrescriptionUpda
 // SetDrugsCommaSeperated sets the "drugs_comma_seperated" field.
 func (pu *PrescriptionUpdate) SetDrugsCommaSeperated(s string) *PrescriptionUpdate {
 	pu.mutation.SetDrugsCommaSeperated(s)
+	return pu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (pu *PrescriptionUpdate) SetCreatedAt(t time.Time) *PrescriptionUpdate {
+	pu.mutation.SetCreatedAt(t)
+	return pu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (pu *PrescriptionUpdate) SetNillableCreatedAt(t *time.Time) *PrescriptionUpdate {
+	if t != nil {
+		pu.SetCreatedAt(*t)
+	}
 	return pu
 }
 
@@ -182,6 +197,13 @@ func (pu *PrescriptionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: prescription.FieldDrugsCommaSeperated,
 		})
 	}
+	if value, ok := pu.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: prescription.FieldCreatedAt,
+		})
+	}
 	if pu.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -258,6 +280,20 @@ func (puo *PrescriptionUpdateOne) SetPatientNationalCode(s string) *Prescription
 // SetDrugsCommaSeperated sets the "drugs_comma_seperated" field.
 func (puo *PrescriptionUpdateOne) SetDrugsCommaSeperated(s string) *PrescriptionUpdateOne {
 	puo.mutation.SetDrugsCommaSeperated(s)
+	return puo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (puo *PrescriptionUpdateOne) SetCreatedAt(t time.Time) *PrescriptionUpdateOne {
+	puo.mutation.SetCreatedAt(t)
+	return puo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (puo *PrescriptionUpdateOne) SetNillableCreatedAt(t *time.Time) *PrescriptionUpdateOne {
+	if t != nil {
+		puo.SetCreatedAt(*t)
+	}
 	return puo
 }
 
@@ -413,6 +449,13 @@ func (puo *PrescriptionUpdateOne) sqlSave(ctx context.Context) (_node *Prescript
 			Type:   field.TypeString,
 			Value:  value,
 			Column: prescription.FieldDrugsCommaSeperated,
+		})
+	}
+	if value, ok := puo.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: prescription.FieldCreatedAt,
 		})
 	}
 	if puo.mutation.UsersCleared() {

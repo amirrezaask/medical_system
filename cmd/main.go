@@ -31,6 +31,7 @@ var serve = &cobra.Command{
 		}
 
 		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewUsersHandler(services.NewUserService(db.User, &services.AuthService{JWTSecret: []byte("this is a secret")}, db.Prescription)))
+		http.RouteRegisterers = append(http.RouteRegisterers, handlers.NewAdminHandler()
 		if err := server(cfg.Servers.Get("http").Addr); err != nil {
 			panic(err)
 		}

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -35,6 +36,20 @@ func (pc *PrescriptionCreate) SetPatientNationalCode(s string) *PrescriptionCrea
 // SetDrugsCommaSeperated sets the "drugs_comma_seperated" field.
 func (pc *PrescriptionCreate) SetDrugsCommaSeperated(s string) *PrescriptionCreate {
 	pc.mutation.SetDrugsCommaSeperated(s)
+	return pc
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (pc *PrescriptionCreate) SetCreatedAt(t time.Time) *PrescriptionCreate {
+	pc.mutation.SetCreatedAt(t)
+	return pc
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (pc *PrescriptionCreate) SetNillableCreatedAt(t *time.Time) *PrescriptionCreate {
+	if t != nil {
+		pc.SetCreatedAt(*t)
+	}
 	return pc
 }
 
@@ -68,6 +83,7 @@ func (pc *PrescriptionCreate) Save(ctx context.Context) (*Prescription, error) {
 		err  error
 		node *Prescription
 	)
+	pc.defaults()
 	if len(pc.hooks) == 0 {
 		if err = pc.check(); err != nil {
 			return nil, err
@@ -125,6 +141,14 @@ func (pc *PrescriptionCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (pc *PrescriptionCreate) defaults() {
+	if _, ok := pc.mutation.CreatedAt(); !ok {
+		v := prescription.DefaultCreatedAt()
+		pc.mutation.SetCreatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (pc *PrescriptionCreate) check() error {
 	if _, ok := pc.mutation.DoctorID(); !ok {
@@ -135,6 +159,9 @@ func (pc *PrescriptionCreate) check() error {
 	}
 	if _, ok := pc.mutation.DrugsCommaSeperated(); !ok {
 		return &ValidationError{Name: "drugs_comma_seperated", err: errors.New(`models: missing required field "drugs_comma_seperated"`)}
+	}
+	if _, ok := pc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`models: missing required field "created_at"`)}
 	}
 	return nil
 }
@@ -187,6 +214,14 @@ func (pc *PrescriptionCreate) createSpec() (*Prescription, *sqlgraph.CreateSpec)
 		})
 		_node.DrugsCommaSeperated = value
 	}
+	if value, ok := pc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: prescription.FieldCreatedAt,
+		})
+		_node.CreatedAt = value
+	}
 	if nodes := pc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -224,6 +259,7 @@ func (pcb *PrescriptionCreateBulk) Save(ctx context.Context) ([]*Prescription, e
 	for i := range pcb.builders {
 		func(i int, root context.Context) {
 			builder := pcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*PrescriptionMutation)
 				if !ok {

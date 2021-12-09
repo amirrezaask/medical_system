@@ -4,6 +4,7 @@ package user
 
 import (
 	"fmt"
+	"time"
 )
 
 const (
@@ -19,6 +20,8 @@ const (
 	FieldNationalCode = "national_code"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
 	FieldPasswordHash = "password_hash"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
 	// EdgePrescriptions holds the string denoting the prescriptions edge name in mutations.
 	EdgePrescriptions = "prescriptions"
 	// Table holds the table name of the user in the database.
@@ -39,6 +42,7 @@ var Columns = []string{
 	FieldUserType,
 	FieldNationalCode,
 	FieldPasswordHash,
+	FieldCreatedAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -50,6 +54,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+)
 
 // UserType defines the type for the "user_type" enum field.
 type UserType string

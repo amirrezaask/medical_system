@@ -10,6 +10,7 @@ import (
 	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
 	"sync"
+	"time"
 
 	"entgo.io/ent"
 )
@@ -384,6 +385,7 @@ type PrescriptionMutation struct {
 	adddoctor_id          *int64
 	patient_national_code *string
 	drugs_comma_seperated *string
+	created_at            *time.Time
 	clearedFields         map[string]struct{}
 	users                 *int
 	clearedusers          bool
@@ -599,6 +601,42 @@ func (m *PrescriptionMutation) ResetDrugsCommaSeperated() {
 	m.drugs_comma_seperated = nil
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (m *PrescriptionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PrescriptionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the Prescription entity.
+// If the Prescription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PrescriptionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PrescriptionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
 // SetUsersID sets the "users" edge to the User entity by id.
 func (m *PrescriptionMutation) SetUsersID(id int) {
 	m.users = &id
@@ -657,7 +695,7 @@ func (m *PrescriptionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PrescriptionMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.doctor_id != nil {
 		fields = append(fields, prescription.FieldDoctorID)
 	}
@@ -666,6 +704,9 @@ func (m *PrescriptionMutation) Fields() []string {
 	}
 	if m.drugs_comma_seperated != nil {
 		fields = append(fields, prescription.FieldDrugsCommaSeperated)
+	}
+	if m.created_at != nil {
+		fields = append(fields, prescription.FieldCreatedAt)
 	}
 	return fields
 }
@@ -681,6 +722,8 @@ func (m *PrescriptionMutation) Field(name string) (ent.Value, bool) {
 		return m.PatientNationalCode()
 	case prescription.FieldDrugsCommaSeperated:
 		return m.DrugsCommaSeperated()
+	case prescription.FieldCreatedAt:
+		return m.CreatedAt()
 	}
 	return nil, false
 }
@@ -696,6 +739,8 @@ func (m *PrescriptionMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldPatientNationalCode(ctx)
 	case prescription.FieldDrugsCommaSeperated:
 		return m.OldDrugsCommaSeperated(ctx)
+	case prescription.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Prescription field %s", name)
 }
@@ -725,6 +770,13 @@ func (m *PrescriptionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDrugsCommaSeperated(v)
+		return nil
+	case prescription.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Prescription field %s", name)
@@ -798,6 +850,9 @@ func (m *PrescriptionMutation) ResetField(name string) error {
 		return nil
 	case prescription.FieldDrugsCommaSeperated:
 		m.ResetDrugsCommaSeperated()
+		return nil
+	case prescription.FieldCreatedAt:
+		m.ResetCreatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Prescription field %s", name)
@@ -889,6 +944,7 @@ type UserMutation struct {
 	user_type            *user.UserType
 	national_code        *string
 	password_hash        *string
+	created_at           *time.Time
 	clearedFields        map[string]struct{}
 	prescriptions        map[int]struct{}
 	removedprescriptions map[int]struct{}
@@ -1121,6 +1177,42 @@ func (m *UserMutation) ResetPasswordHash() {
 	m.password_hash = nil
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (m *UserMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UserMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UserMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
 // AddPrescriptionIDs adds the "prescriptions" edge to the Prescription entity by ids.
 func (m *UserMutation) AddPrescriptionIDs(ids ...int) {
 	if m.prescriptions == nil {
@@ -1194,7 +1286,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.name != nil {
 		fields = append(fields, user.FieldName)
 	}
@@ -1206,6 +1298,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.password_hash != nil {
 		fields = append(fields, user.FieldPasswordHash)
+	}
+	if m.created_at != nil {
+		fields = append(fields, user.FieldCreatedAt)
 	}
 	return fields
 }
@@ -1223,6 +1318,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.NationalCode()
 	case user.FieldPasswordHash:
 		return m.PasswordHash()
+	case user.FieldCreatedAt:
+		return m.CreatedAt()
 	}
 	return nil, false
 }
@@ -1240,6 +1337,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldNationalCode(ctx)
 	case user.FieldPasswordHash:
 		return m.OldPasswordHash(ctx)
+	case user.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -1276,6 +1375,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetPasswordHash(v)
+		return nil
+	case user.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -1337,6 +1443,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldPasswordHash:
 		m.ResetPasswordHash()
+		return nil
+	case user.FieldCreatedAt:
+		m.ResetCreatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

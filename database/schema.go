@@ -1,6 +1,8 @@
 package database
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -16,6 +18,8 @@ func (User) Fields() []ent.Field {
 		field.Enum("user_type").Values("patient", "doctor"),
 		field.String("national_code"),
 		field.String("password_hash"),
+		field.Time("created_at").
+			Default(time.Now),
 	}
 }
 
@@ -46,6 +50,8 @@ func (Prescription) Fields() []ent.Field {
 		field.Int64("doctor_id"),
 		field.String("patient_national_code"),
 		field.String("drugs_comma_seperated"),
+		field.Time("created_at").
+			Default(time.Now),
 	}
 }
 func (Prescription) Edges() []ent.Edge {

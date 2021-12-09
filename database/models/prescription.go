@@ -7,6 +7,7 @@ import (
 	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
@@ -22,6 +23,8 @@ type Prescription struct {
 	PatientNationalCode string `json:"patient_national_code,omitempty"`
 	// DrugsCommaSeperated holds the value of the "drugs_comma_seperated" field.
 	DrugsCommaSeperated string `json:"drugs_comma_seperated,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PrescriptionQuery when eager-loading is set.
 	Edges              PrescriptionEdges `json:"edges"`
@@ -60,6 +63,8 @@ func (*Prescription) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case prescription.FieldPatientNationalCode, prescription.FieldDrugsCommaSeperated:
 			values[i] = new(sql.NullString)
+		case prescription.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		case prescription.ForeignKeys[0]: // user_prescriptions
 			values[i] = new(sql.NullInt64)
 		default:
@@ -100,6 +105,12 @@ func (pr *Prescription) assignValues(columns []string, values []interface{}) err
 				return fmt.Errorf("unexpected type %T for field drugs_comma_seperated", values[i])
 			} else if value.Valid {
 				pr.DrugsCommaSeperated = value.String
+			}
+		case prescription.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				pr.CreatedAt = value.Time
 			}
 		case prescription.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -147,6 +158,8 @@ func (pr *Prescription) String() string {
 	builder.WriteString(pr.PatientNationalCode)
 	builder.WriteString(", drugs_comma_seperated=")
 	builder.WriteString(pr.DrugsCommaSeperated)
+	builder.WriteString(", created_at=")
+	builder.WriteString(pr.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

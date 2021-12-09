@@ -26,6 +26,7 @@ var (
 		{Name: "doctor_id", Type: field.TypeInt64},
 		{Name: "patient_national_code", Type: field.TypeString},
 		{Name: "drugs_comma_seperated", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
 		{Name: "user_prescriptions", Type: field.TypeInt, Nullable: true},
 	}
 	// PrescriptionsTable holds the schema information for the "prescriptions" table.
@@ -36,7 +37,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "prescriptions_users_prescriptions",
-				Columns:    []*schema.Column{PrescriptionsColumns[4]},
+				Columns:    []*schema.Column{PrescriptionsColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -49,6 +50,7 @@ var (
 		{Name: "user_type", Type: field.TypeEnum, Enums: []string{"patient", "doctor"}},
 		{Name: "national_code", Type: field.TypeString},
 		{Name: "password_hash", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
