@@ -10,10 +10,12 @@ import (
 	"medical_system/database/models/migrate"
 
 	"medical_system/database/models/admin"
+	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -23,6 +25,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Admin is the client for interacting with the Admin builders.
 	Admin *AdminClient
+	// Prescription is the client for interacting with the Prescription builders.
+	Prescription *PrescriptionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -39,6 +43,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Admin = NewAdminClient(c.config)
+	c.Prescription = NewPrescriptionClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -71,10 +76,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Admin:  NewAdminClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		Admin:        NewAdminClient(cfg),
+		Prescription: NewPrescriptionClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -92,9 +98,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		config: cfg,
-		Admin:  NewAdminClient(cfg),
-		User:   NewUserClient(cfg),
+		config:       cfg,
+		Admin:        NewAdminClient(cfg),
+		Prescription: NewPrescriptionClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -125,6 +132,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Admin.Use(hooks...)
+	c.Prescription.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
@@ -218,6 +226,112 @@ func (c *AdminClient) Hooks() []Hook {
 	return c.hooks.Admin
 }
 
+// PrescriptionClient is a client for the Prescription schema.
+type PrescriptionClient struct {
+	config
+}
+
+// NewPrescriptionClient returns a client for the Prescription from the given config.
+func NewPrescriptionClient(c config) *PrescriptionClient {
+	return &PrescriptionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `prescription.Hooks(f(g(h())))`.
+func (c *PrescriptionClient) Use(hooks ...Hook) {
+	c.hooks.Prescription = append(c.hooks.Prescription, hooks...)
+}
+
+// Create returns a create builder for Prescription.
+func (c *PrescriptionClient) Create() *PrescriptionCreate {
+	mutation := newPrescriptionMutation(c.config, OpCreate)
+	return &PrescriptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Prescription entities.
+func (c *PrescriptionClient) CreateBulk(builders ...*PrescriptionCreate) *PrescriptionCreateBulk {
+	return &PrescriptionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Prescription.
+func (c *PrescriptionClient) Update() *PrescriptionUpdate {
+	mutation := newPrescriptionMutation(c.config, OpUpdate)
+	return &PrescriptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PrescriptionClient) UpdateOne(pr *Prescription) *PrescriptionUpdateOne {
+	mutation := newPrescriptionMutation(c.config, OpUpdateOne, withPrescription(pr))
+	return &PrescriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PrescriptionClient) UpdateOneID(id int) *PrescriptionUpdateOne {
+	mutation := newPrescriptionMutation(c.config, OpUpdateOne, withPrescriptionID(id))
+	return &PrescriptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Prescription.
+func (c *PrescriptionClient) Delete() *PrescriptionDelete {
+	mutation := newPrescriptionMutation(c.config, OpDelete)
+	return &PrescriptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *PrescriptionClient) DeleteOne(pr *Prescription) *PrescriptionDeleteOne {
+	return c.DeleteOneID(pr.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *PrescriptionClient) DeleteOneID(id int) *PrescriptionDeleteOne {
+	builder := c.Delete().Where(prescription.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PrescriptionDeleteOne{builder}
+}
+
+// Query returns a query builder for Prescription.
+func (c *PrescriptionClient) Query() *PrescriptionQuery {
+	return &PrescriptionQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Prescription entity by its id.
+func (c *PrescriptionClient) Get(ctx context.Context, id int) (*Prescription, error) {
+	return c.Query().Where(prescription.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PrescriptionClient) GetX(ctx context.Context, id int) *Prescription {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUsers queries the users edge of a Prescription.
+func (c *PrescriptionClient) QueryUsers(pr *Prescription) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(prescription.Table, prescription.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, prescription.UsersTable, prescription.UsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PrescriptionClient) Hooks() []Hook {
+	return c.hooks.Prescription
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -301,6 +415,22 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryPrescriptions queries the prescriptions edge of a User.
+func (c *UserClient) QueryPrescriptions(u *User) *PrescriptionQuery {
+	query := &PrescriptionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(prescription.Table, prescription.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PrescriptionsTable, user.PrescriptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

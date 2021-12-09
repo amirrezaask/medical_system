@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"github.com/golang-jwt/jwt"
+	"medical_system/config"
 	"medical_system/entities"
 	"medical_system/services"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type UsersHandler struct {
@@ -13,8 +16,11 @@ type UsersHandler struct {
 }
 
 func (h *UsersHandler) Register(e *echo.Echo) {
+	jwtMiddleware := middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey: config.Instance.JWTSecret,
+	})
 	users := e.Group("users")
-	users.GET("/profile/:nationalNumber", h.GetProfile)
+	users.GET("/profile", h.GetProfile, jwtMiddleware)
 	users.POST("/login", h.Login)
 	users.POST("/signup", h.SignUp)
 }
@@ -53,9 +59,8 @@ func (h *UsersHandler) Login(ctx echo.Context) error {
 
 }
 func (h *UsersHandler) GetProfile(ctx echo.Context) error {
-	var u entities.UserGetProfileRequest
-	u.NationalNumber = ctx.Param("nationalNumber")
-	user, err := h.srv.FindUser(u.NationalNumber)
+	userData := ctx.Get("user").(jwt.MapClaims)
+	user, err := h.srv.FindUser(userData["national_code"].(string))
 	if err != nil {
 		return ctx.NoContent(http.StatusUnauthorized)
 	}

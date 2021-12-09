@@ -6,6 +6,7 @@ import (
 	"medical_system/database/models/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -490,6 +491,34 @@ func PasswordHashEqualFold(v string) predicate.User {
 func PasswordHashContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldPasswordHash), v))
+	})
+}
+
+// HasPrescriptions applies the HasEdge predicate on the "prescriptions" edge.
+func HasPrescriptions() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PrescriptionsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PrescriptionsTable, PrescriptionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPrescriptionsWith applies the HasEdge predicate on the "prescriptions" edge with a given conditions (other predicates).
+func HasPrescriptionsWith(preds ...predicate.Prescription) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(PrescriptionsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PrescriptionsTable, PrescriptionsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

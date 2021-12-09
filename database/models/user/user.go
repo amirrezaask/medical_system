@@ -19,8 +19,17 @@ const (
 	FieldNationalCode = "national_code"
 	// FieldPasswordHash holds the string denoting the password_hash field in the database.
 	FieldPasswordHash = "password_hash"
+	// EdgePrescriptions holds the string denoting the prescriptions edge name in mutations.
+	EdgePrescriptions = "prescriptions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
+	// PrescriptionsTable is the table that holds the prescriptions relation/edge.
+	PrescriptionsTable = "prescriptions"
+	// PrescriptionsInverseTable is the table name for the Prescription entity.
+	// It exists in this package in order to avoid circular dependency with the "prescription" package.
+	PrescriptionsInverseTable = "prescriptions"
+	// PrescriptionsColumn is the table column denoting the prescriptions relation/edge.
+	PrescriptionsColumn = "user_prescriptions"
 )
 
 // Columns holds all SQL columns for user fields.

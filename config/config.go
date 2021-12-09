@@ -8,6 +8,7 @@ import (
 type config struct {
 	Servers   serversConfig   `json:"servers"`
 	Databases databasesConfig `json:"databases"`
+	JWTSecret string          `json:"jwt_secret"`
 }
 
 var Instance = &config{}

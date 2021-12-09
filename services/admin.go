@@ -41,7 +41,7 @@ func (srv *adminService) LoginAdmin(u entities.AdminLoginRequest) (string, error
 	if !srv.auth.CheckPasswordHash(u.Password, admin.PasswordHash) {
 		return "", fmt.Errorf("passwords do not match")
 	}
-	token, err := srv.auth.MakeJWT(admin.Username, "admin")
+	token, err := srv.auth.MakeJWT(admin.Username, "admin", "")
 	if err != nil {
 		return "", err
 	}

@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"medical_system/config"
 	"medical_system/entities"
 	"medical_system/services"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type AdminHandler struct {
@@ -15,7 +17,10 @@ type AdminHandler struct {
 
 func (h *AdminHandler) Register(e *echo.Echo) {
 	users := e.Group("admin")
-	users.GET("/profile/:username", h.GetProfile)
+	jwtMiddleware := middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey: config.Instance.JWTSecret,
+	})
+	users.GET("/profile/:username", h.GetProfile, jwtMiddleware)
 	users.POST("/login", h.Login)
 	users.GET("/users/:type", h.GetUsers)
 }

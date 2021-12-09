@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -41,6 +42,21 @@ func (uc *UserCreate) SetNationalCode(s string) *UserCreate {
 func (uc *UserCreate) SetPasswordHash(s string) *UserCreate {
 	uc.mutation.SetPasswordHash(s)
 	return uc
+}
+
+// AddPrescriptionIDs adds the "prescriptions" edge to the Prescription entity by IDs.
+func (uc *UserCreate) AddPrescriptionIDs(ids ...int) *UserCreate {
+	uc.mutation.AddPrescriptionIDs(ids...)
+	return uc
+}
+
+// AddPrescriptions adds the "prescriptions" edges to the Prescription entity.
+func (uc *UserCreate) AddPrescriptions(p ...*Prescription) *UserCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uc.AddPrescriptionIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -188,6 +204,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldPasswordHash,
 		})
 		_node.PasswordHash = value
+	}
+	if nodes := uc.mutation.PrescriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

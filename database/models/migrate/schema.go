@@ -20,6 +20,28 @@ var (
 		Columns:    AdminsColumns,
 		PrimaryKey: []*schema.Column{AdminsColumns[0]},
 	}
+	// PrescriptionsColumns holds the columns for the "prescriptions" table.
+	PrescriptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "doctor_id", Type: field.TypeInt64},
+		{Name: "patient_national_code", Type: field.TypeString},
+		{Name: "drugs_comma_seperated", Type: field.TypeString},
+		{Name: "user_prescriptions", Type: field.TypeInt, Nullable: true},
+	}
+	// PrescriptionsTable holds the schema information for the "prescriptions" table.
+	PrescriptionsTable = &schema.Table{
+		Name:       "prescriptions",
+		Columns:    PrescriptionsColumns,
+		PrimaryKey: []*schema.Column{PrescriptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "prescriptions_users_prescriptions",
+				Columns:    []*schema.Column{PrescriptionsColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -37,9 +59,11 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AdminsTable,
+		PrescriptionsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	PrescriptionsTable.ForeignKeys[0].RefTable = UsersTable
 }

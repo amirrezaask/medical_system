@@ -11,8 +11,8 @@ type UserSignupRequest struct {
 }
 
 type UserLoginRequest struct {
-	NationalNumber string `json:"national_number"`
-	Password       string `json:"password"`
+	NationalCode string `json:"national_code"`
+	Password     string `json:"password"`
 }
 
 type UserGetProfileRequest struct {

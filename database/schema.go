@@ -2,6 +2,7 @@ package database
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -18,6 +19,13 @@ func (User) Fields() []ent.Field {
 	}
 }
 
+func (User) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("prescriptions", Prescription.Type),
+	}
+
+}
+
 type Admin struct {
 	ent.Schema
 }
@@ -26,5 +34,22 @@ func (Admin) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username"),
 		field.String("password_hash"),
+	}
+}
+
+type Prescription struct {
+	ent.Schema
+}
+
+func (Prescription) Fields() []ent.Field {
+	return []ent.Field{
+		field.Int64("doctor_id"),
+		field.String("patient_national_code"),
+		field.String("drugs_comma_seperated"),
+	}
+}
+func (Prescription) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("users", User.Type).Ref("prescriptions").Unique(),
 	}
 }

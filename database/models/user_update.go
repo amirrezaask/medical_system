@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"medical_system/database/models/predicate"
+	"medical_system/database/models/prescription"
 	"medical_system/database/models/user"
 
 	"entgo.io/ent/dialect/sql"
@@ -50,9 +51,45 @@ func (uu *UserUpdate) SetPasswordHash(s string) *UserUpdate {
 	return uu
 }
 
+// AddPrescriptionIDs adds the "prescriptions" edge to the Prescription entity by IDs.
+func (uu *UserUpdate) AddPrescriptionIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddPrescriptionIDs(ids...)
+	return uu
+}
+
+// AddPrescriptions adds the "prescriptions" edges to the Prescription entity.
+func (uu *UserUpdate) AddPrescriptions(p ...*Prescription) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.AddPrescriptionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearPrescriptions clears all "prescriptions" edges to the Prescription entity.
+func (uu *UserUpdate) ClearPrescriptions() *UserUpdate {
+	uu.mutation.ClearPrescriptions()
+	return uu
+}
+
+// RemovePrescriptionIDs removes the "prescriptions" edge to Prescription entities by IDs.
+func (uu *UserUpdate) RemovePrescriptionIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemovePrescriptionIDs(ids...)
+	return uu
+}
+
+// RemovePrescriptions removes "prescriptions" edges to Prescription entities.
+func (uu *UserUpdate) RemovePrescriptions(p ...*Prescription) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.RemovePrescriptionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -171,6 +208,60 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldPasswordHash,
 		})
 	}
+	if uu.mutation.PrescriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedPrescriptionsIDs(); len(nodes) > 0 && !uu.mutation.PrescriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.PrescriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -214,9 +305,45 @@ func (uuo *UserUpdateOne) SetPasswordHash(s string) *UserUpdateOne {
 	return uuo
 }
 
+// AddPrescriptionIDs adds the "prescriptions" edge to the Prescription entity by IDs.
+func (uuo *UserUpdateOne) AddPrescriptionIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddPrescriptionIDs(ids...)
+	return uuo
+}
+
+// AddPrescriptions adds the "prescriptions" edges to the Prescription entity.
+func (uuo *UserUpdateOne) AddPrescriptions(p ...*Prescription) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.AddPrescriptionIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearPrescriptions clears all "prescriptions" edges to the Prescription entity.
+func (uuo *UserUpdateOne) ClearPrescriptions() *UserUpdateOne {
+	uuo.mutation.ClearPrescriptions()
+	return uuo
+}
+
+// RemovePrescriptionIDs removes the "prescriptions" edge to Prescription entities by IDs.
+func (uuo *UserUpdateOne) RemovePrescriptionIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemovePrescriptionIDs(ids...)
+	return uuo
+}
+
+// RemovePrescriptions removes "prescriptions" edges to Prescription entities.
+func (uuo *UserUpdateOne) RemovePrescriptions(p ...*Prescription) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.RemovePrescriptionIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -358,6 +485,60 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Value:  value,
 			Column: user.FieldPasswordHash,
 		})
+	}
+	if uuo.mutation.PrescriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedPrescriptionsIDs(); len(nodes) > 0 && !uuo.mutation.PrescriptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.PrescriptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PrescriptionsTable,
+			Columns: []string{user.PrescriptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: prescription.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

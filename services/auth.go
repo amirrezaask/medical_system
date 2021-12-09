@@ -37,10 +37,11 @@ func (a *AuthService) ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	return token.Claims.(jwt.MapClaims), nil
 }
 
-func (a *AuthService) MakeJWT(id string, userType string) (string, error) {
+func (a *AuthService) MakeJWT(id string, userType string, nationalCode string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":        id,
-		"user_type": userType,
+		"id":            id,
+		"user_type":     userType,
+		"national_code": nationalCode,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
