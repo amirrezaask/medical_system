@@ -25,8 +25,8 @@ func (h *UsersHandler) Register(e *echo.Echo) {
 	users.GET("/profile", h.GetProfile, jwtMiddleware)
 	users.POST("/login", h.Login)
 	users.POST("/signup", h.SignUp)
-	users.POST("/prescriptions", h.AddPrescription)
-	users.GET("/prescriptions/:patientID", h.GetPrescriptions)
+	users.POST("/prescriptions", h.AddPrescription, jwtMiddleware)
+	users.GET("/prescriptions/:patientID", h.GetPrescriptions, jwtMiddleware)
 }
 func NewUsersHandler(srv services.UserService) *UsersHandler {
 	return &UsersHandler{srv}

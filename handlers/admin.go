@@ -22,8 +22,8 @@ func (h *AdminHandler) Register(e *echo.Echo) {
 	})
 	users.GET("/profile/:username", h.GetProfile, jwtMiddleware)
 	users.POST("/login", h.Login)
-	users.GET("/users/:type", h.GetUsers)
-	users.GET("/admin/stats", h.Stats)
+	users.GET("/users/:type", h.GetUsers, jwtMiddleware)
+	users.GET("/admin/stats", h.Stats, jwtMiddleware)
 }
 func NewAdminHandler(srv services.AdminService, userSrv services.UserService) *AdminHandler {
 	return &AdminHandler{srv, userSrv}
