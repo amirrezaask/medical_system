@@ -24,6 +24,5 @@ type Admin struct {
 }
 
 type AddPrescriptionRequest struct {
-	PatientNationalCode string
 	Prescription
 }
